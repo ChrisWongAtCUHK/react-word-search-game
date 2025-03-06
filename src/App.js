@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import './App.scss'
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
     ['L', 'S', 'E', 'I', 'K', 'O', 'O', 'C', 'U', 'F'],
   ]
 
-  const words = [
+  const words = useMemo(() => [
     'BARS',
     'CANDY',
     'CARROT',
@@ -28,10 +28,9 @@ function App() {
     'NUTS',
     'PRETZEL',
     'YOGURT',
-  ]
+  ], [])
 
   const [foundWords, setFoundWords] = useState([])
-  const [foundCells, setFoundCells] = useState([])
   const [selectedCells, setSelectedCells] = useState([])
   const [done, setDone] = useState(false)
   const [dragging, setDragging] = useState(false)
@@ -123,7 +122,7 @@ function App() {
     }
 
     let foundWord = words.find((word) => word === selected.join(''))
-    
+
     let x_start = selectedCells[0]?.x
     let y_start = selectedCells[0]?.y
     let x_end = selectedCells[selectedCells.length - 1].x
@@ -151,7 +150,6 @@ function App() {
         selectedCells.forEach((coordinate) => {
           cells.push({ x: coordinate.x, y: coordinate.y })
         })
-        setFoundCells((pre) => [...pre, ...cells])
 
         setFoundWords((pre) => [
           ...pre,
@@ -216,18 +214,18 @@ function App() {
   }
 
   function isFound(word) {
-    const f = foundWords.find(w => { 
-        const eq = w.value === word
-        return eq
+    const f = foundWords.find((w) => {
+      const eq = w.value === word
+      return eq
     })
     return f && f.value
-}
+  }
 
   useEffect(() => {
     setDebounceActiveCell(() => debounce(wordSelectUpdate, 100))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  
+
   useEffect(() => {
     let cells = []
     if (selectedFrom && selectedTo) {
@@ -279,7 +277,7 @@ function App() {
   useEffect(() => {
     setDone(() => foundWords.length === words.length)
   }, [foundWords, words])
-  
+
   return (
     <main>
       <section className='main-content word-game'>
@@ -288,7 +286,14 @@ function App() {
           <div className='words-list'>
             {words.map((word) => (
               <div key={word} className='words-list__item'>
-                <span className={['words-list__value', isFound(word) ? 'found' : ''].join(' ')}>{word}</span>
+                <span
+                  className={[
+                    'words-list__value',
+                    isFound(word) ? 'found' : '',
+                  ].join(' ')}
+                >
+                  {word}
+                </span>
               </div>
             ))}
           </div>
@@ -309,12 +314,13 @@ function App() {
                     className='cell'
                     onMouseDown={wordSelectStart}
                     onMouseUp={wordSelectStop}
+                    onMouseMove={wordSelectUpdate}
                     onMouseEnter={() =>
                       setDebounceActiveCell(() => `${col_key}_${row_key}`)
                     }
                     onTouchStart={wordSelectStart}
                     onTouchEnd={wordSelectStop}
-                    onMouseMove={wordSelectUpdate}
+                    onTouchMove={wordSelectUpdate}
                   >
                     <svg
                       style={{ border: '1px solid black' }}
