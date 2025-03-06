@@ -44,6 +44,27 @@ function App() {
               </div>
             ))}
           </div>
+
+          <div className='matrix word-search-game__matrix'>
+            {matrix.map((row, row_key) =>
+              row.map((letter, col_key) => (
+                <div key={`${row_key}_${col_key}`} className='matrix-cell'>
+                  <div className='cell'>
+                    <svg
+                      style={{ border: '1px solid black' }}
+                      width='100%'
+                      height='100%'
+                      viewBox='0 0 18 18'
+                    >
+                      <text x='50%' y='13' text-anchor='middle'>
+                        { letter }
+                      </text>
+                    </svg>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </section>
     </main>
