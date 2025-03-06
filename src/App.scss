@@ -1,0 +1,84 @@
+$local-green: #32cd99;
+.word-search-game {
+  margin-top: 20px;
+  max-width: 640px;
+
+  &__matrix {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+  }
+
+  .matrix-cell {
+    text-align: center;
+    aspect-ratio: 1/1;
+    &.selected {
+      background-color: #ccc;
+    }
+    &.done {
+      transition: transform 3s;
+      transform: rotate(360deg) scale(0.01, 0.01);
+    }
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      user-select: none;
+      position: relative;
+      z-index: 2011;
+      svg {
+        position: absolute;
+        left: 0;
+        top: 0;
+        line-height: 0;
+        width: 100%;
+        font-size: 0.7rem;
+        fill: var(--color-text);
+      }
+    }
+  }
+
+  .word-strike {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    z-index: 100;
+    transform-origin: 0 0;
+    opacity: 0.5;
+    border-radius: 25%/150%;
+    margin: -100% 0 0 0;
+    padding: 0;
+    background-color: $local-green;
+
+    @for $i from 0 to 8 {
+      &.word-strike-direction-#{$i} {
+        transform: rotate(($i * 45deg) - 90deg);
+      }
+    }
+    @for $i from 0 to 20 {
+      &:not(.word-strike-diagonal).word-strike-length-#{$i} {
+        width: calc($i * 100%);
+        transform-origin: calc(1 / $i / 2 * 100%) 50%;
+      }
+      &.word-strike-diagonal.word-strike-length-#{$i} {
+        width: $i * 100% * 1.32;
+        transform-origin: calc(1 / $i / 2 / 1.38 * 100%) 50%;
+      } // 1.414214 is a hypotenuse multiplier
+    }
+  }
+}
+
+.words-list {
+  margin-bottom: 20px;
+  &__item {
+    display: inline-block;
+    margin-bottom: 5px;
+    margin-right: 10px;
+    .found {
+      text-decoration: line-through;
+    }
+  }
+}
