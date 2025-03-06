@@ -214,6 +214,14 @@ function App() {
     return classes.join(' ')
   }
 
+  function isFound(word) {
+    const f = foundWords.find(w => { 
+        const eq = w.value === word
+        return eq
+    })
+    return f && f.value
+}
+
   useEffect(() => {
     setDebounceActiveCell(() => debounce(wordSelectUpdate, 100))
   }, [])
@@ -273,7 +281,7 @@ function App() {
           <div className='words-list'>
             {words.map((word) => (
               <div key={word} className='words-list__item'>
-                <span className='words-list__value'>{word}</span>
+                <span className={['words-list__value', isFound(word) ? 'found' : ''].join(' ')}>{word}</span>
               </div>
             ))}
           </div>
