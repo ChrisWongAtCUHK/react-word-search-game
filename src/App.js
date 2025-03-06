@@ -123,14 +123,15 @@ function App() {
     }
 
     let foundWord = words.find((word) => word === selected.join(''))
-
+    
     let x_start = selectedCells[0]?.x
     let y_start = selectedCells[0]?.y
     let x_end = selectedCells[selectedCells.length - 1].x
     let y_end = selectedCells[selectedCells.length - 1].y
 
     if (!foundWord) {
-      foundWord = words.find((word) => word === selected.reverse().join(''))
+      const selected_word = selected.reverse().join('')
+      foundWord = words.find((word) => word === selected_word)
       x_end = selectedCells[0]?.x
       y_end = selectedCells[0]?.y
       x_start = selectedCells[selectedCells.length - 1].x
@@ -224,7 +225,9 @@ function App() {
 
   useEffect(() => {
     setDebounceActiveCell(() => debounce(wordSelectUpdate, 100))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  
   useEffect(() => {
     let cells = []
     if (selectedFrom && selectedTo) {
@@ -273,6 +276,10 @@ function App() {
     })
   }, [selectedFrom, selectedTo])
 
+  useEffect(() => {
+    setDone(() => foundWords.length === words.length)
+  }, [foundWords, words])
+  
   return (
     <main>
       <section className='main-content word-game'>
