@@ -58,7 +58,7 @@ $local-green: #32cd99;
         transform: rotate(($i * 45deg) - 90deg);
       }
     }
-    @for $i from 0 to 20 {
+    @for $i from 1 to 21 {
       &:not(.word-strike-diagonal).word-strike-length-#{$i} {
         width: calc($i * 100%);
         transform-origin: calc(1 / $i / 2 * 100%) 50%;
