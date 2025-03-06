@@ -123,6 +123,7 @@ function App() {
     }
 
     let foundWord = words.find((word) => word === selected.join(''))
+
     let x_start = selectedCells[0]?.x
     let y_start = selectedCells[0]?.y
     let x_end = selectedCells[selectedCells.length - 1].x
@@ -194,6 +195,23 @@ function App() {
     setSelectedTo(() => {
       return { x: parseInt(x), y: parseInt(y) }
     })
+  }
+
+  function wordLinesForTile(x, y) {
+    return foundWords.filter((w) => w.x_start === x && w.y_start === y)
+  }
+
+  function wordLineClasses(wordLine) {
+    const classes = [
+      'word-strike',
+      'word-strike-direction-' + wordLine.direction,
+      'word-strike-length-' + wordLine.length,
+    ]
+    // Odd directions are diagonal
+    if (wordLine.direction % 2 === 1) {
+      classes.push('word-strike-diagonal')
+    }
+    return classes.join(' ')
   }
 
   useEffect(() => {
@@ -294,6 +312,12 @@ function App() {
                       </text>
                     </svg>
                   </div>
+                  {wordLinesForTile(col_key, row_key).map((wordLineData, i) => (
+                    <div
+                      key={`${row_key}_${col_key}_${i}`}
+                      className={wordLineClasses(wordLineData)}
+                    ></div>
+                  ))}
                 </div>
               ))
             )}
