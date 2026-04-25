@@ -1,35 +1,35 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import './App.scss'
 
+const matrix = [
+  ['A', 'M', 'C', 'N', 'T', 'S', 'K', 'B', 'A', 'N'],
+  ['D', 'O', 'A', 'H', 'T', 'O', 'T', 'A', 'L', 'S'],
+  ['A', 'J', 'N', 'X', 'E', 'V', 'R', 'U', 'O', 'R'],
+  ['P', 'C', 'D', 'U', 'P', 'E', 'F', 'R', 'N', 'E'],
+  ['R', 'B', 'Y', 'R', 'S', 'R', 'S', 'V', 'A', 'K'],
+  ['E', 'Y', 'O', 'G', 'U', 'R', 'T', 'E', 'R', 'C'],
+  ['T', 'L', 'N', 'I', 'B', 'A', 'R', 'S', 'G', 'A'],
+  ['Z', 'K', 'T', 'G', 'I', 'I', 'J', 'X', 'W', 'R'],
+  ['E', 'I', 'L', 'R', 'S', 'S', 'P', 'I', 'H', 'C'],
+  ['L', 'S', 'E', 'I', 'K', 'O', 'O', 'C', 'U', 'F'],
+]
+
+const words = [
+  'BARS',
+  'CANDY',
+  'CARROT',
+  'CHEESE',
+  'CHIPS',
+  'COOKIES',
+  'CRACKERS',
+  'FRUIT',
+  'GRANOLA',
+  'NUTS',
+  'PRETZEL',
+  'YOGURT',
+]
+
 function App() {
-  const matrix = [
-    ['A', 'M', 'C', 'N', 'T', 'S', 'K', 'B', 'A', 'N'],
-    ['D', 'O', 'A', 'H', 'T', 'O', 'T', 'A', 'L', 'S'],
-    ['A', 'J', 'N', 'X', 'E', 'V', 'R', 'U', 'O', 'R'],
-    ['P', 'C', 'D', 'U', 'P', 'E', 'F', 'R', 'N', 'E'],
-    ['R', 'B', 'Y', 'R', 'S', 'R', 'S', 'V', 'A', 'K'],
-    ['E', 'Y', 'O', 'G', 'U', 'R', 'T', 'E', 'R', 'C'],
-    ['T', 'L', 'N', 'I', 'B', 'A', 'R', 'S', 'G', 'A'],
-    ['Z', 'K', 'T', 'G', 'I', 'I', 'J', 'X', 'W', 'R'],
-    ['E', 'I', 'L', 'R', 'S', 'S', 'P', 'I', 'H', 'C'],
-    ['L', 'S', 'E', 'I', 'K', 'O', 'O', 'C', 'U', 'F'],
-  ]
-
-  const words = useMemo(() => [
-    'BARS',
-    'CANDY',
-    'CARROT',
-    'CHEESE',
-    'CHIPS',
-    'COOKIES',
-    'CRACKERS',
-    'FRUIT',
-    'GRANOLA',
-    'NUTS',
-    'PRETZEL',
-    'YOGURT',
-  ], [])
-
   const [foundWords, setFoundWords] = useState([])
   const [selectedCells, setSelectedCells] = useState([])
   const [done, setDone] = useState(false)
@@ -276,7 +276,7 @@ function App() {
 
   useEffect(() => {
     setDone(() => foundWords.length === words.length)
-  }, [foundWords, words])
+  }, [foundWords])
 
   return (
     <main>
@@ -340,7 +340,7 @@ function App() {
                     ></div>
                   ))}
                 </div>
-              ))
+              )),
             )}
           </div>
         </div>
