@@ -36,21 +36,6 @@ function App() {
   const [dragging, setDragging] = useState(false)
   const [selectedFrom, setSelectedFrom] = useState(null)
   const [selectedTo, setSelectedTo] = useState(null)
-  const [debounceActiveCell, setDebounceActiveCell] = useState('')
-
-  function debounce(fn, delay) {
-    let timeout
-
-    return (...args) => {
-      if (timeout) {
-        clearTimeout(timeout)
-      }
-
-      timeout = setTimeout(() => {
-        fn(...args)
-      }, delay)
-    }
-  }
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
@@ -187,8 +172,6 @@ function App() {
       ) {
         x = parseInt(touchedElement.dataset.x, 10)
         y = parseInt(touchedElement.dataset.y, 10)
-      } else {
-        ;[x, y] = debounceActiveCell.split('_')
       }
     }
     setSelectedTo(() => {
@@ -220,11 +203,6 @@ function App() {
     })
     return f && f.value
   }
-
-  useEffect(() => {
-    setDebounceActiveCell(() => debounce(wordSelectUpdate, 100))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   useEffect(() => {
     let cells = []
@@ -315,9 +293,6 @@ function App() {
                     onMouseDown={wordSelectStart}
                     onMouseUp={wordSelectStop}
                     onMouseMove={wordSelectUpdate}
-                    onMouseEnter={() =>
-                      setDebounceActiveCell(() => `${col_key}_${row_key}`)
-                    }
                     onTouchStart={wordSelectStart}
                     onTouchEnd={wordSelectStop}
                     onTouchMove={wordSelectUpdate}
