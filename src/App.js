@@ -36,6 +36,7 @@ function App() {
   const [dragging, setDragging] = useState(false)
   const [selectedFrom, setSelectedFrom] = useState(null)
   const [selectedTo, setSelectedTo] = useState(null)
+  const [lastPos, setLastPos] = useState({ x: 0, y: 0 })
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
@@ -172,11 +173,17 @@ function App() {
       ) {
         x = parseInt(touchedElement.dataset.x, 10)
         y = parseInt(touchedElement.dataset.y, 10)
+        setLastPos({ x, y })
+      } else {
+        // If the touch is outside of the grid, use the last known position
+        x = lastPos.x
+        y = lastPos.y
       }
     }
-    setSelectedTo(() => {
-      return { x: parseInt(x), y: parseInt(y) }
-    })
+    // Only update selectedTo if the position has changed
+    if (x !== undefined && y !== undefined) {
+      setSelectedTo({ x, y })
+    }
   }
 
   function wordLinesForTile(x, y) {
@@ -292,6 +299,7 @@ function App() {
                     className='cell'
                     onMouseDown={wordSelectStart}
                     onMouseUp={wordSelectStop}
+                    onMouseEnter={(e) => dragging && wordSelectUpdate(e)} // Only trigger onMouseMove when dragging
                     onMouseMove={wordSelectUpdate}
                     onTouchStart={wordSelectStart}
                     onTouchEnd={wordSelectStop}
@@ -308,6 +316,7 @@ function App() {
                       </text>
                     </svg>
                   </div>
+                  {/* Render word lines for this tile */}
                   {wordLinesForTile(col_key, row_key).map((wordLineData, i) => (
                     <div
                       key={`${row_key}_${col_key}_${i}`}
