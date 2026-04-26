@@ -4,6 +4,7 @@ import './App.scss'
 const GRID_SIZE = 10
 
 function generateMatrix(wordList) {
+  wordList.sort((a, b) => b.length - a.length) // Sort words by length (longest first)
   // Init empty grid
   let grid = Array(GRID_SIZE)
     .fill(null)
@@ -34,20 +35,38 @@ function generateMatrix(wordList) {
   // Randomly place words in the grid
   wordList.forEach((word) => {
     let placed = false
-    let attempts = 0
-    while (!placed && attempts < 100) {
-      const [dy, dx] = directions[Math.floor(Math.random() * directions.length)]
-      const row = Math.floor(Math.random() * GRID_SIZE)
-      const col = Math.floor(Math.random() * GRID_SIZE)
 
-      if (canPlace(word, row, col, dy, dx)) {
+    // List all possible placements for this word (row, col, direction)
+    const possibilities = []
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        directions.forEach((dir) => {
+          possibilities.push({ row, col, dy: dir[0], dx: dir[1] })
+        })
+      }
+    }
+
+    // Fisher-Yates Shuffle
+    for (let i = possibilities.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[possibilities[i], possibilities[j]] = [
+        possibilities[j],
+        possibilities[i],
+      ]
+    }
+
+    // Try to place the word in one of the possible positions
+    for (const pos of possibilities) {
+      if (canPlace(word, pos.row, pos.col, pos.dy, pos.dx)) {
         for (let i = 0; i < word.length; i++) {
-          grid[row + i * dy][col + i * dx] = word[i]
+          grid[pos.row + i * pos.dy][pos.col + i * pos.dx] = word[i]
         }
         placed = true
+        break // Stop after placing the word
       }
-      attempts++
     }
+
+    if (!placed) console.warn(`無法放入單字: ${word}`)
   })
 
   // Randomly fill remaining empty cells with letters
