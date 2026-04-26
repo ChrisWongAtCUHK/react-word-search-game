@@ -1,18 +1,66 @@
 import { useEffect, useState } from 'react'
 import './App.scss'
 
-const matrix = [
-  ['A', 'M', 'C', 'N', 'T', 'S', 'K', 'B', 'A', 'N'],
-  ['D', 'O', 'A', 'H', 'T', 'O', 'T', 'A', 'L', 'S'],
-  ['A', 'J', 'N', 'X', 'E', 'V', 'R', 'U', 'O', 'R'],
-  ['P', 'C', 'D', 'U', 'P', 'E', 'F', 'R', 'N', 'E'],
-  ['R', 'B', 'Y', 'R', 'S', 'R', 'S', 'V', 'A', 'K'],
-  ['E', 'Y', 'O', 'G', 'U', 'R', 'T', 'E', 'R', 'C'],
-  ['T', 'L', 'N', 'I', 'B', 'A', 'R', 'S', 'G', 'A'],
-  ['Z', 'K', 'T', 'G', 'I', 'I', 'J', 'X', 'W', 'R'],
-  ['E', 'I', 'L', 'R', 'S', 'S', 'P', 'I', 'H', 'C'],
-  ['L', 'S', 'E', 'I', 'K', 'O', 'O', 'C', 'U', 'F'],
-]
+const GRID_SIZE = 10
+
+function generateMatrix(wordList) {
+  // Init empty grid
+  let grid = Array(GRID_SIZE)
+    .fill(null)
+    .map(() => Array(GRID_SIZE).fill(''))
+
+  // 8 directions [dy, dx]
+  const directions = [
+    [0, 1], // right
+    [1, 0], // down
+    [1, 1], // right-down
+    [1, -1], // left-down
+    [0, -1], // left
+    [-1, 0], // up
+    [-1, -1], // left-up
+    [-1, 1], // right-up
+  ]
+
+  function canPlace(word, row, col, dy, dx) {
+    for (let i = 0; i < word.length; i++) {
+      let r = row + i * dy
+      let c = col + i * dx
+      if (r < 0 || r >= GRID_SIZE || c < 0 || c >= GRID_SIZE) return false
+      if (grid[r][c] !== '' && grid[r][c] !== word[i]) return false
+    }
+    return true
+  }
+
+  // Randomly place words in the grid
+  wordList.forEach((word) => {
+    let placed = false
+    let attempts = 0
+    while (!placed && attempts < 100) {
+      const [dy, dx] = directions[Math.floor(Math.random() * directions.length)]
+      const row = Math.floor(Math.random() * GRID_SIZE)
+      const col = Math.floor(Math.random() * GRID_SIZE)
+
+      if (canPlace(word, row, col, dy, dx)) {
+        for (let i = 0; i < word.length; i++) {
+          grid[row + i * dy][col + i * dx] = word[i]
+        }
+        placed = true
+      }
+      attempts++
+    }
+  })
+
+  // Randomly fill remaining empty cells with letters
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      if (grid[r][c] === '') {
+        grid[r][c] = letters[Math.floor(Math.random() * letters.length)]
+      }
+    }
+  }
+  return grid
+}
 
 const words = [
   'BARS',
@@ -37,6 +85,9 @@ function App() {
   const [selectedFrom, setSelectedFrom] = useState(null)
   const [selectedTo, setSelectedTo] = useState(null)
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 })
+  const [currentMatrix, setCurrentMatrix] = useState(() =>
+    generateMatrix(words),
+  )
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
@@ -98,7 +149,7 @@ function App() {
     let selected = []
 
     selectedCells.forEach((coordinate) => {
-      selected.push(matrix[coordinate.y][coordinate.x])
+      selected.push(currentMatrix[coordinate.y][coordinate.x])
     })
 
     if (selectedCells.length < 2) {
@@ -211,6 +262,22 @@ function App() {
     return f && f.value
   }
 
+  // Reset the game
+  function handleReset() {
+    setFoundWords([])
+    setCurrentMatrix(generateMatrix(words))
+    setDone(false)
+  }
+
+  useEffect(() => {
+    if (done) {
+      setTimeout(() => {
+        alert('Congratulations! You found all the words!')
+        handleReset()
+      }, 100)
+    }
+  }, [done])
+
   useEffect(() => {
     let cells = []
     if (selectedFrom && selectedTo) {
@@ -284,7 +351,7 @@ function App() {
           </div>
 
           <div className='matrix word-search-game__matrix'>
-            {matrix.map((row, row_key) =>
+            {currentMatrix.map((row, row_key) =>
               row.map((letter, col_key) => (
                 <div
                   key={`${row_key}_${col_key}`}
