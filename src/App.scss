@@ -1,4 +1,9 @@
 $local-green: #32cd99;
+html,
+body {
+  overscroll-behavior: none; /* Prevents pull-to-refresh and scroll bounce */
+}
+
 .word-search-game {
   margin-top: 20px;
   max-width: 640px;
