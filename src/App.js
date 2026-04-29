@@ -1,7 +1,28 @@
 import { useCallback, useEffect, useState } from 'react'
+import { faker } from '@faker-js/faker'
+
 import './App.scss'
 
 const GRID_SIZE = 10
+const MIN_WORD_COUNT = 5
+const MAX_WORD_COUNT = 10
+
+function generateWords(min = MIN_WORD_COUNT, max = MAX_WORD_COUNT) {
+  const minCeiled = Math.ceil(min)
+  const maxFloored = Math.floor(max)
+  const wordListSize = Math.floor(
+    Math.random() * (maxFloored - minCeiled + 1) + minCeiled,
+  )
+
+  return Array.from({ length: wordListSize }, () => {
+    let word = faker.word.noun()
+    while (word.length > GRID_SIZE) {
+      word = faker.word.noun()
+    }
+
+    return word.toUpperCase()
+  })
+}
 
 function generateMatrix(wordList) {
   // Filter out the words longer than the grid size
@@ -85,28 +106,8 @@ function generateMatrix(wordList) {
   return grid
 }
 
-// Themes to be selected
-const THEMES = {
-  FOODS: [
-    'BARS',
-    'CANDY',
-    'CARROT',
-    'CHEESE',
-    'CHIPS',
-    'COOKIES',
-    'CRACKERS',
-    'FRUIT',
-    'GRANOLA',
-    'NUTS',
-    'PRETZEL',
-    'YOGURT',
-  ],
-  ANIMALS: ['DOG', 'CAT', 'PANDA', 'TIGER', 'LION'],
-  FRUITS: ['APPLE', 'BANANA', 'ORANGE', 'GRAPE', 'KIWI'],
-  SPACE: ['STAR', 'MOON', 'MARS', 'SUN', 'EARTH'],
-}
-
 function App() {
+  const words = generateWords() // randomly generate words
   const [foundWords, setFoundWords] = useState([])
   const [selectedCells, setSelectedCells] = useState([])
   const [done, setDone] = useState(false)
@@ -114,11 +115,10 @@ function App() {
   const [selectedFrom, setSelectedFrom] = useState(null)
   const [selectedTo, setSelectedTo] = useState(null)
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 })
-  const [currentWords, setCurrentWords] = useState(THEMES.FOODS) // default theme
+  const [currentWords, setCurrentWords] = useState(words)
   const [currentMatrix, setCurrentMatrix] = useState(() =>
-    generateMatrix(THEMES.FOODS),
+    generateMatrix(words),
   )
-  const [inputValue, setInputValue] = useState('')
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
@@ -295,27 +295,12 @@ function App() {
 
   // Reset the game
   const handleReset = useCallback(() => {
+    const words = generateWords()
+    setCurrentWords(words)
+    setCurrentMatrix(generateMatrix(words))
     setFoundWords([])
-    setCurrentMatrix(generateMatrix(currentWords))
     setDone(false)
-  }, [currentWords])
-
-  // 處理提交新單字
-  function handleUpdateWords() {
-    const newWords = inputValue
-      .split(',')
-      .map((w) => w.trim().toUpperCase())
-      .filter((w) => w.length > 0)
-    if (newWords.length > 0) {
-      // create a new matrix
-      const newMatrix = generateMatrix(newWords)
-      // update state, trigger React re-render
-      setCurrentMatrix(newMatrix)
-      setCurrentWords(newWords)
-
-      setFoundWords([]) // clear found words
-    }
-  }
+  }, [])
 
   useEffect(() => {
     if (done) {
@@ -381,51 +366,6 @@ function App() {
   return (
     <main>
       <section className='main-content word-game'>
-        <div style={{ marginBottom: '20px' }}>
-          <h3>Self defined words (delimit by comma):</h3>
-          <input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              const char = e.key
-
-              // Check if the key is NOT an English letter AND NOT a comma
-              const isLetter =
-                (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
-              const isComma = char === ','
-
-              if (!isLetter && !isComma) {
-                e.preventDefault() // This actually stops the character from appearing
-              }
-            }}
-            placeholder='Example: APPLE,BANANA,CHERRY'
-            style={{ padding: '8px', width: '300px' }}
-          />
-          <button
-            onClick={handleUpdateWords}
-            style={{ marginLeft: '10px', padding: '8px' }}
-          >
-            Generate a new game
-          </button>
-
-          <div style={{ marginTop: '10px' }}>
-            Fast change theme：
-            {Object.keys(THEMES).map((theme) => (
-              <button
-                key={theme}
-                onClick={() => {
-                  setCurrentWords(THEMES[theme])
-                  setCurrentMatrix(generateMatrix(THEMES[theme]))
-                  setFoundWords([])
-                }}
-                style={{ margin: '0 5px' }}
-              >
-                {theme}
-              </button>
-            ))}
-          </div>
-        </div>
-
         <h2>Find these {currentWords.length} words</h2>
         <div className='word-search-game'>
           <div className='words-list'>
