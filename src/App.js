@@ -382,6 +382,18 @@ function App() {
           <input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              const char = e.key
+
+              // Check if the key is NOT an English letter AND NOT a comma
+              const isLetter =
+                (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
+              const isComma = char === ','
+
+              if (!isLetter && !isComma) {
+                e.preventDefault() // This actually stops the character from appearing
+              }
+            }}
             placeholder='Example: APPLE,BANANA,CHERRY'
             style={{ padding: '8px', width: '300px' }}
           />
