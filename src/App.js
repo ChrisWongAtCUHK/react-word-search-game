@@ -219,6 +219,8 @@ function App() {
           cells.push({ x: coordinate.x, y: coordinate.y })
         })
 
+        playSuccessBeep()
+
         setFoundWords((pre) => [
           ...pre,
           {
@@ -291,6 +293,31 @@ function App() {
       return eq
     })
     return f && f.value
+  }
+
+  // Helper function to play a beep
+  function playSuccessBeep() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext
+    if (!AudioContext) return // Browser doesn't support it
+
+    const ctx = new AudioContext()
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+
+    // Connect: Oscillator -> Gain -> Speakers
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
+
+    // Settings for a pleasant "ding"
+    oscillator.type = 'sine' // Smooth wave
+    oscillator.frequency.setValueAtTime(880, ctx.currentTime) // A5 note (440Hz * 2)
+
+    // Fade out to avoid clicking sounds
+    gainNode.gain.setValueAtTime(0.1, ctx.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
+
+    oscillator.start()
+    oscillator.stop(ctx.currentTime + 0.1) // Stop after 100ms
   }
 
   // Reset the game
