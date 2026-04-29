@@ -83,25 +83,24 @@ function generateMatrix(wordList) {
 
 // themes to be selected
 const THEMES = {
+  FOODS: [
+    'BARS',
+    'CANDY',
+    'CARROT',
+    'CHEESE',
+    'CHIPS',
+    'COOKIES',
+    'CRACKERS',
+    'FRUIT',
+    'GRANOLA',
+    'NUTS',
+    'PRETZEL',
+    'YOGURT',
+  ],
   ANIMALS: ['DOG', 'CAT', 'PANDA', 'TIGER', 'LION'],
   FRUITS: ['APPLE', 'BANANA', 'ORANGE', 'GRAPE', 'KIWI'],
   SPACE: ['STAR', 'MOON', 'MARS', 'SUN', 'EARTH'],
 }
-
-const WORDS = [
-  'BARS',
-  'CANDY',
-  'CARROT',
-  'CHEESE',
-  'CHIPS',
-  'COOKIES',
-  'CRACKERS',
-  'FRUIT',
-  'GRANOLA',
-  'NUTS',
-  'PRETZEL',
-  'YOGURT',
-]
 
 function App() {
   const [foundWords, setFoundWords] = useState([])
@@ -111,9 +110,9 @@ function App() {
   const [selectedFrom, setSelectedFrom] = useState(null)
   const [selectedTo, setSelectedTo] = useState(null)
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 })
-  const [currentWords, setCurrentWords] = useState(WORDS) // default theme
+  const [currentWords, setCurrentWords] = useState(THEMES.FOODS) // default theme
   const [currentMatrix, setCurrentMatrix] = useState(() =>
-    generateMatrix(WORDS),
+    generateMatrix(THEMES.FOODS),
   )
   const [inputValue, setInputValue] = useState('')
 
