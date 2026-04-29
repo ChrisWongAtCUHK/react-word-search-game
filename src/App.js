@@ -4,7 +4,11 @@ import './App.scss'
 const GRID_SIZE = 10
 
 function generateMatrix(wordList) {
-  wordList.sort((a, b) => b.length - a.length) // Sort wordList by length (longest first)
+  // Filter out the words longer than the grid size
+  const filteredWords = wordList.filter((w) => w.length <= GRID_SIZE)
+
+  // Sort filteredWords by length (longest first)
+  filteredWords.sort((a, b) => b.length - a.length)
   // Init empty grid
   let grid = Array(GRID_SIZE)
     .fill(null)
@@ -33,7 +37,7 @@ function generateMatrix(wordList) {
   }
 
   // Randomly place words in the grid
-  wordList.forEach((word) => {
+  filteredWords.forEach((word) => {
     let placed = false
 
     // List all possible placements for this word (row, col, direction)
@@ -66,7 +70,7 @@ function generateMatrix(wordList) {
       }
     }
 
-    if (!placed) console.warn(`無法放入單字: ${word}`)
+    if (!placed) console.warn(`Cannot place word: ${word}`)
   })
 
   // Randomly fill remaining empty cells with letters
@@ -81,7 +85,7 @@ function generateMatrix(wordList) {
   return grid
 }
 
-// themes to be selected
+// Themes to be selected
 const THEMES = {
   FOODS: [
     'BARS',
