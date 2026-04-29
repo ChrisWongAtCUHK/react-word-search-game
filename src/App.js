@@ -81,7 +81,7 @@ function generateMatrix(wordList) {
   return grid
 }
 
-// 定義預設主題 (可選)
+// themes to be selected
 const THEMES = {
   ANIMALS: ['DOG', 'CAT', 'PANDA', 'TIGER', 'LION'],
   FRUITS: ['APPLE', 'BANANA', 'ORANGE', 'GRAPE', 'KIWI'],
@@ -111,7 +111,7 @@ function App() {
   const [selectedFrom, setSelectedFrom] = useState(null)
   const [selectedTo, setSelectedTo] = useState(null)
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 })
-  const [currentWords, setCurrentWords] = useState(WORDS) // 預設主題
+  const [currentWords, setCurrentWords] = useState(WORDS) // default theme
   const [currentMatrix, setCurrentMatrix] = useState(() =>
     generateMatrix(WORDS),
   )
@@ -304,13 +304,13 @@ function App() {
       .map((w) => w.trim().toUpperCase())
       .filter((w) => w.length > 0)
     if (newWords.length > 0) {
-      // 生成一個全新的矩陣
+      // create a new matrix
       const newMatrix = generateMatrix(newWords)
-      // 更新 State，這會觸發 React 重新渲染畫面
+      // update state, trigger React re-render
       setCurrentMatrix(newMatrix)
       setCurrentWords(newWords)
 
-      setFoundWords([]) // 清空已找到的單字
+      setFoundWords([]) // clear found words
     }
   }
 
@@ -379,22 +379,22 @@ function App() {
     <main>
       <section className='main-content word-game'>
         <div style={{ marginBottom: '20px' }}>
-          <h3>自定義主題單字 (用逗號隔開):</h3>
+          <h3>Self defined words (delimit by comma):</h3>
           <input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder='例如: APPLE,BANANA,CHERRY'
+            placeholder='Example: APPLE,BANANA,CHERRY'
             style={{ padding: '8px', width: '300px' }}
           />
           <button
             onClick={handleUpdateWords}
             style={{ marginLeft: '10px', padding: '8px' }}
           >
-            生成新遊戲
+            Generate a new game
           </button>
 
           <div style={{ marginTop: '10px' }}>
-            快速切換：
+            Fast change theme：
             {Object.keys(THEMES).map((theme) => (
               <button
                 key={theme}
