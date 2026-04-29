@@ -106,6 +106,8 @@ function generateMatrix(wordList) {
   return grid
 }
 
+const soundWellDone = new Audio('/sounds/win.mp3')
+
 function App() {
   const words = generateWords() // randomly generate words
   const [foundWords, setFoundWords] = useState([])
@@ -333,6 +335,7 @@ function App() {
     if (done) {
       setTimeout(() => {
         alert('Congratulations! You found all the words!')
+        soundWellDone.play()
         handleReset()
       }, 100)
     }
