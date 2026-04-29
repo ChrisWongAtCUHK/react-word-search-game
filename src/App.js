@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import './App.scss'
 
 const GRID_SIZE = 10
 
 function generateMatrix(wordList) {
-  wordList.sort((a, b) => b.length - a.length) // Sort words by length (longest first)
+  wordList.sort((a, b) => b.length - a.length) // Sort wordList by length (longest first)
   // Init empty grid
   let grid = Array(GRID_SIZE)
     .fill(null)
@@ -81,7 +81,14 @@ function generateMatrix(wordList) {
   return grid
 }
 
-const words = [
+// 定義預設主題 (可選)
+const THEMES = {
+  ANIMALS: ['DOG', 'CAT', 'PANDA', 'TIGER', 'LION'],
+  FRUITS: ['APPLE', 'BANANA', 'ORANGE', 'GRAPE', 'KIWI'],
+  SPACE: ['STAR', 'MOON', 'MARS', 'SUN', 'EARTH'],
+}
+
+const WORDS = [
   'BARS',
   'CANDY',
   'CARROT',
@@ -104,9 +111,11 @@ function App() {
   const [selectedFrom, setSelectedFrom] = useState(null)
   const [selectedTo, setSelectedTo] = useState(null)
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 })
+  const [currentWords, setCurrentWords] = useState(WORDS) // 預設主題
   const [currentMatrix, setCurrentMatrix] = useState(() =>
-    generateMatrix(words),
+    generateMatrix(WORDS),
   )
+  const [inputValue, setInputValue] = useState('')
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
@@ -177,7 +186,7 @@ function App() {
       return
     }
 
-    let foundWord = words.find((word) => word === selected.join(''))
+    let foundWord = currentWords.find((word) => word === selected.join(''))
 
     let x_start = selectedCells[0]?.x
     let y_start = selectedCells[0]?.y
@@ -186,7 +195,7 @@ function App() {
 
     if (!foundWord) {
       const selected_word = selected.reverse().join('')
-      foundWord = words.find((word) => word === selected_word)
+      foundWord = currentWords.find((word) => word === selected_word)
       x_end = selectedCells[0]?.x
       y_end = selectedCells[0]?.y
       x_start = selectedCells[selectedCells.length - 1].x
@@ -282,10 +291,27 @@ function App() {
   }
 
   // Reset the game
-  function handleReset() {
+  const handleReset = useCallback(() => {
     setFoundWords([])
-    setCurrentMatrix(generateMatrix(words))
+    setCurrentMatrix(generateMatrix(currentWords))
     setDone(false)
+  }, [currentWords])
+
+  // 處理提交新單字
+  function handleUpdateWords() {
+    const newWords = inputValue
+      .split(',')
+      .map((w) => w.trim().toUpperCase())
+      .filter((w) => w.length > 0)
+    if (newWords.length > 0) {
+      // 生成一個全新的矩陣
+      const newMatrix = generateMatrix(newWords)
+      // 更新 State，這會觸發 React 重新渲染畫面
+      setCurrentMatrix(newMatrix)
+      setCurrentWords(newWords)
+
+      setFoundWords([]) // 清空已找到的單字
+    }
   }
 
   useEffect(() => {
@@ -295,7 +321,7 @@ function App() {
         handleReset()
       }, 100)
     }
-  }, [done])
+  }, [done, handleReset])
 
   useEffect(() => {
     let cells = []
@@ -346,16 +372,49 @@ function App() {
   }, [selectedFrom, selectedTo])
 
   useEffect(() => {
-    setDone(() => foundWords.length === words.length)
-  }, [foundWords])
+    setDone(() => foundWords.length === currentWords.length)
+  }, [foundWords, currentWords])
 
   return (
     <main>
       <section className='main-content word-game'>
-        <h2>Find these {words.length} words</h2>
+        <div style={{ marginBottom: '20px' }}>
+          <h3>自定義主題單字 (用逗號隔開):</h3>
+          <input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder='例如: APPLE,BANANA,CHERRY'
+            style={{ padding: '8px', width: '300px' }}
+          />
+          <button
+            onClick={handleUpdateWords}
+            style={{ marginLeft: '10px', padding: '8px' }}
+          >
+            生成新遊戲
+          </button>
+
+          <div style={{ marginTop: '10px' }}>
+            快速切換：
+            {Object.keys(THEMES).map((theme) => (
+              <button
+                key={theme}
+                onClick={() => {
+                  setCurrentWords(THEMES[theme])
+                  setCurrentMatrix(generateMatrix(THEMES[theme]))
+                  setFoundWords([])
+                }}
+                style={{ margin: '0 5px' }}
+              >
+                {theme}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <h2>Find these {currentWords.length} words</h2>
         <div className='word-search-game'>
           <div className='words-list'>
-            {words.map((word) => (
+            {currentWords.map((word) => (
               <div key={word} className='words-list__item'>
                 <span
                   className={[
