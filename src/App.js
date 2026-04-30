@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { faker } from '@faker-js/faker'
 
 import './App.scss'
@@ -6,8 +6,6 @@ import './App.scss'
 const GRID_SIZE = 10
 const MIN_WORD_COUNT = 5
 const MAX_WORD_COUNT = 10
-
-let globalCtx = null
 
 function generateWords(min = MIN_WORD_COUNT, max = MAX_WORD_COUNT) {
   const minCeiled = Math.ceil(min)
@@ -123,7 +121,26 @@ function App() {
   const [currentMatrix, setCurrentMatrix] = useState(() =>
     generateMatrix(words),
   )
-  const [setAudioUnlocked] = useState(false)
+  const [started, setStarted] = useState(false)
+  const audioCtxRef = useRef(null)
+  const unlockAudio = useCallback(() => {
+    // make sure there is instance
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (
+        window.AudioContext || window.webkitAudioContext
+      )()
+    }
+
+    const ctx = audioCtxRef.current
+
+    // unlock if suspended or interrupted
+    if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
+      // force resume
+      ctx.resume()
+    }
+
+    setStarted(true)
+  }, [])
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
@@ -136,13 +153,7 @@ function App() {
   }
 
   function wordSelectStart(e) {
-    if (!globalCtx) {
-      globalCtx = new (window.AudioContext || window.webkitAudioContext)()
-    }
-
-    if (globalCtx.state === 'suspended') {
-      globalCtx.resume() // 用戶點擊時直接解鎖
-    }
+    unlockAudio()
     setDragging(() => true)
     const touchedElement = e.target.closest('div.cell')
 
@@ -309,26 +320,35 @@ function App() {
 
   // Helper function to play a beep
   function playSuccessBeep() {
-    const oscillator = globalCtx.createOscillator()
-    const gainNode = globalCtx.createGain()
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (
+        window.AudioContext || window.webkitAudioContext
+      )()
+    }
+
+    const ctx = audioCtxRef.current
+
+    if (ctx.state === 'suspended') {
+      ctx.resume()
+    }
+
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
 
     // Connect: Oscillator -> Gain -> Speakers
     oscillator.connect(gainNode)
-    gainNode.connect(globalCtx.destination)
+    gainNode.connect(ctx.destination)
 
     // Settings for a pleasant "ding"
     oscillator.type = 'sine' // Smooth wave
-    oscillator.frequency.setValueAtTime(880, globalCtx.currentTime) // A5 note (440Hz * 2)
+    oscillator.frequency.setValueAtTime(880, ctx.currentTime) // A5 note (440Hz * 2)
 
     // Fade out to avoid clicking sounds
-    gainNode.gain.setValueAtTime(0.1, globalCtx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.001,
-      globalCtx.currentTime + 0.1,
-    )
+    gainNode.gain.setValueAtTime(0.1, ctx.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
 
     oscillator.start()
-    oscillator.stop(globalCtx.currentTime + 0.1) // Stop after 100ms
+    oscillator.stop(ctx.currentTime + 0.1) // Stop after 100ms
   }
 
   // Reset the game
@@ -339,22 +359,6 @@ function App() {
     setFoundWords([])
     setDone(false)
   }, [])
-
-  const unlockAudio = () => {
-    if (!globalCtx) {
-      globalCtx = new (window.AudioContext || window.webkitAudioContext)()
-    }
-    if (globalCtx.state === 'suspended') {
-      globalCtx.resume()
-    }
-    setAudioUnlocked(true)
-  }
-
-  // If you want, call this on first click/touch:
-  const ensuredUnlockAudio = (e) => {
-    e.preventDefault() // or just run it
-    unlockAudio()
-  }
 
   useEffect(() => {
     if (done) {
@@ -421,72 +425,77 @@ function App() {
   return (
     <main>
       <section className='main-content word-game'>
-        <h2>Find these {currentWords.length} words</h2>
-        <div className='word-search-game'>
-          <div className='words-list'>
-            {currentWords.map((word) => (
-              <div key={word} className='words-list__item'>
-                <span
-                  className={[
-                    'words-list__value',
-                    isFound(word) ? 'found' : '',
-                  ].join(' ')}
-                >
-                  {word}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div
-            className='matrix word-search-game__matrix'
-            onClick={ensuredUnlockAudio}
-            onTouchStart={ensuredUnlockAudio}
-          >
-            {currentMatrix.map((row, row_key) =>
-              row.map((letter, col_key) => (
-                <div
-                  key={`${row_key}_${col_key}`}
-                  className={[
-                    'matrix-cell',
-                    letterTileClasses(col_key, row_key),
-                  ].join(' ')}
-                >
-                  <div
-                    data-x={col_key}
-                    data-y={row_key}
-                    className='cell'
-                    onMouseDown={wordSelectStart}
-                    onMouseUp={wordSelectStop}
-                    onMouseEnter={(e) => dragging && wordSelectUpdate(e)} // Only trigger onMouseMove when dragging
-                    onMouseMove={wordSelectUpdate}
-                    onTouchStart={wordSelectStart}
-                    onTouchEnd={wordSelectStop}
-                    onTouchMove={wordSelectUpdate}
-                  >
-                    <svg
-                      style={{ border: '1px solid black' }}
-                      width='100%'
-                      height='100%'
-                      viewBox='0 0 18 18'
+        {!started ? (
+          <button onClick={unlockAudio}>Click here to start</button>
+        ) : null}
+        {started ? (
+          <>
+            <h2>Find these {currentWords.length} words</h2>
+            <div className='word-search-game'>
+              <div className='words-list'>
+                {currentWords.map((word) => (
+                  <div key={word} className='words-list__item'>
+                    <span
+                      className={[
+                        'words-list__value',
+                        isFound(word) ? 'found' : '',
+                      ].join(' ')}
                     >
-                      <text x='50%' y='13' textAnchor='middle'>
-                        {letter}
-                      </text>
-                    </svg>
+                      {word}
+                    </span>
                   </div>
-                  {/* Render word lines for this tile */}
-                  {wordLinesForTile(col_key, row_key).map((wordLineData, i) => (
+                ))}
+              </div>
+
+              <div className='matrix word-search-game__matrix'>
+                {currentMatrix.map((row, row_key) =>
+                  row.map((letter, col_key) => (
                     <div
-                      key={`${row_key}_${col_key}_${i}`}
-                      className={wordLineClasses(wordLineData)}
-                    ></div>
-                  ))}
-                </div>
-              )),
-            )}
-          </div>
-        </div>
+                      key={`${row_key}_${col_key}`}
+                      className={[
+                        'matrix-cell',
+                        letterTileClasses(col_key, row_key),
+                      ].join(' ')}
+                    >
+                      <div
+                        data-x={col_key}
+                        data-y={row_key}
+                        className='cell'
+                        onMouseDown={wordSelectStart}
+                        onMouseUp={wordSelectStop}
+                        onMouseEnter={(e) => dragging && wordSelectUpdate(e)} // Only trigger onMouseMove when dragging
+                        onMouseMove={wordSelectUpdate}
+                        onTouchStart={wordSelectStart}
+                        onTouchEnd={wordSelectStop}
+                        onTouchMove={wordSelectUpdate}
+                      >
+                        <svg
+                          style={{ border: '1px solid black' }}
+                          width='100%'
+                          height='100%'
+                          viewBox='0 0 18 18'
+                        >
+                          <text x='50%' y='13' textAnchor='middle'>
+                            {letter}
+                          </text>
+                        </svg>
+                      </div>
+                      {/* Render word lines for this tile */}
+                      {wordLinesForTile(col_key, row_key).map(
+                        (wordLineData, i) => (
+                          <div
+                            key={`${row_key}_${col_key}_${i}`}
+                            className={wordLineClasses(wordLineData)}
+                          ></div>
+                        ),
+                      )}
+                    </div>
+                  )),
+                )}
+              </div>
+            </div>
+          </>
+        ) : null}
       </section>
     </main>
   )
