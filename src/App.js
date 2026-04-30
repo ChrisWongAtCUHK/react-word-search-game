@@ -123,6 +123,7 @@ function App() {
   const [currentMatrix, setCurrentMatrix] = useState(() =>
     generateMatrix(words),
   )
+  const [audioUnlocked, setAudioUnlocked] = useState(false)
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
@@ -339,6 +340,22 @@ function App() {
     setDone(false)
   }, [])
 
+  const unlockAudio = () => {
+    if (!globalCtx) {
+      globalCtx = new (window.AudioContext || window.webkitAudioContext)()
+    }
+    if (globalCtx.state === 'suspended') {
+      globalCtx.resume()
+    }
+    setAudioUnlocked(true)
+  }
+
+  // If you want, call this on first click/touch:
+  const ensuredUnlockAudio = (e) => {
+    e.preventDefault() // or just run it
+    unlockAudio()
+  }
+
   useEffect(() => {
     if (done) {
       setTimeout(() => {
@@ -421,7 +438,11 @@ function App() {
             ))}
           </div>
 
-          <div className='matrix word-search-game__matrix'>
+          <div
+            className='matrix word-search-game__matrix'
+            onClick={ensuredUnlockAudio}
+            onTouchStart={ensuredUnlockAudio}
+          >
             {currentMatrix.map((row, row_key) =>
               row.map((letter, col_key) => (
                 <div
