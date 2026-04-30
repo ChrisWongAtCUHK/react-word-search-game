@@ -334,6 +334,8 @@ function App() {
 
     const oscillator = ctx.createOscillator()
     const gainNode = ctx.createGain()
+    // 50ms
+    const duration = 0.05
 
     // Connect: Oscillator -> Gain -> Speakers
     oscillator.connect(gainNode)
@@ -341,14 +343,17 @@ function App() {
 
     // Settings for a pleasant "ding"
     oscillator.type = 'sine' // Smooth wave
-    oscillator.frequency.setValueAtTime(880, ctx.currentTime) // A5 note (440Hz * 2)
+    oscillator.frequency.setValueAtTime(1320, ctx.currentTime) // E6
 
     // Fade out to avoid clicking sounds
     gainNode.gain.setValueAtTime(0.1, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.001,
+      ctx.currentTime + duration,
+    )
 
     oscillator.start()
-    oscillator.stop(ctx.currentTime + 0.1) // Stop after 100ms
+    oscillator.stop(ctx.currentTime + duration)
   }
 
   // Reset the game
