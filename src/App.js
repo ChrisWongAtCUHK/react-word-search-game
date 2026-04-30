@@ -7,6 +7,8 @@ const GRID_SIZE = 10
 const MIN_WORD_COUNT = 5
 const MAX_WORD_COUNT = 10
 
+let globalCtx = null
+
 function generateWords(min = MIN_WORD_COUNT, max = MAX_WORD_COUNT) {
   const minCeiled = Math.ceil(min)
   const maxFloored = Math.floor(max)
@@ -133,6 +135,13 @@ function App() {
   }
 
   function wordSelectStart(e) {
+    if (!globalCtx) {
+      globalCtx = new (window.AudioContext || window.webkitAudioContext)()
+    }
+
+    if (globalCtx.state === 'suspended') {
+      globalCtx.resume() // 用戶點擊時直接解鎖
+    }
     setDragging(() => true)
     const touchedElement = e.target.closest('div.cell')
 
@@ -299,27 +308,26 @@ function App() {
 
   // Helper function to play a beep
   function playSuccessBeep() {
-    const AudioContext = window.AudioContext || window.webkitAudioContext
-    if (!AudioContext) return // Browser doesn't support it
-
-    const ctx = new AudioContext()
-    const oscillator = ctx.createOscillator()
-    const gainNode = ctx.createGain()
+    const oscillator = globalCtx.createOscillator()
+    const gainNode = globalCtx.createGain()
 
     // Connect: Oscillator -> Gain -> Speakers
     oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
+    gainNode.connect(globalCtx.destination)
 
     // Settings for a pleasant "ding"
     oscillator.type = 'sine' // Smooth wave
-    oscillator.frequency.setValueAtTime(880, ctx.currentTime) // A5 note (440Hz * 2)
+    oscillator.frequency.setValueAtTime(880, globalCtx.currentTime) // A5 note (440Hz * 2)
 
     // Fade out to avoid clicking sounds
-    gainNode.gain.setValueAtTime(0.1, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1)
+    gainNode.gain.setValueAtTime(0.1, globalCtx.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.001,
+      globalCtx.currentTime + 0.1,
+    )
 
     oscillator.start()
-    oscillator.stop(ctx.currentTime + 0.1) // Stop after 100ms
+    oscillator.stop(globalCtx.currentTime + 0.1) // Stop after 100ms
   }
 
   // Reset the game
