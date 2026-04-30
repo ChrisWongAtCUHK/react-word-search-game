@@ -123,7 +123,7 @@ function App() {
   const [currentMatrix, setCurrentMatrix] = useState(() =>
     generateMatrix(words),
   )
-  const [audioUnlocked, setAudioUnlocked] = useState(false)
+  const [setAudioUnlocked] = useState(false)
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
