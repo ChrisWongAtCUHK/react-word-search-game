@@ -16,7 +16,7 @@ function generateWords(min = MIN_WORD_COUNT, max = MAX_WORD_COUNT) {
 
   return Array.from({ length: wordListSize }, () => {
     let word = faker.word.noun()
-    while (word.length > GRID_SIZE) {
+    while (word.length > GRID_SIZE || word.includes('-')) {
       word = faker.word.noun()
     }
 
