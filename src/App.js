@@ -123,51 +123,6 @@ function App() {
   )
   const [started, setStarted] = useState(false)
   const audioCtxRef = useRef(null)
-  const bgmSourceRef = useRef(null)
-  const [isMuted, setIsMuted] = useState(false) // 預設不靜音
-  const gainNode = useRef({ gain: { value: 1 } })
-  const nextNoteTimeRef = useRef(0)
-
-  const startBGM = useCallback(() => {
-    if (isMuted || !audioCtxRef.current) return
-
-    const ctx = audioCtxRef.current
-    const now = ctx.currentTime
-
-    // 確保調度領先於當前時間，保持節奏穩定
-    if (nextNoteTimeRef.current < now) {
-      nextNoteTimeRef.current = now + 0.1
-    }
-
-    // 這裡演示用代碼生成一段簡單的背景層次感音效
-    const oscillator = ctx.createOscillator()
-    const gain = ctx.createGain()
-    gainNode.current = gain
-
-    // 五聲音階
-    const freqs = [261.63, 293.66, 329.63, 392.0, 440.0]
-    oscillator.frequency.value = freqs[Math.floor(Math.random() * freqs.length)]
-    oscillator.type = 'sine'
-
-    // 輕柔的包絡線
-    gain.gain.setValueAtTime(0, nextNoteTimeRef.current)
-    gain.gain.linearRampToValueAtTime(0.05, nextNoteTimeRef.current + 0.1)
-    gain.gain.exponentialRampToValueAtTime(0.001, nextNoteTimeRef.current + 1.5)
-
-    oscillator.connect(gain)
-    gain.connect(ctx.destination)
-
-    oscillator.start(nextNoteTimeRef.current)
-    oscillator.stop(nextNoteTimeRef.current + 1.5)
-
-    // 隨機生成下一個音符的時間 (1.5 ~ 3 秒一個音，營造空靈感)
-    const delay = Math.random() * 1.5 + 1.5
-    nextNoteTimeRef.current += delay
-
-    // 預約下一次播放
-    setTimeout(startBGM, delay * 1000)
-    bgmSourceRef.current = oscillator
-  }, [isMuted])
 
   const unlockAudio = useCallback(() => {
     // Make sure there is an instance
@@ -182,15 +137,11 @@ function App() {
     // Unlock if suspended or interrupted
     if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
       // force resume
-      ctx.resume().then(() => {
-        startBGM() // 在這裡啟動背景音樂
-      })
-    } else {
-      startBGM()
+      ctx.resume()
     }
 
     setStarted(true)
-  }, [startBGM])
+  }, [])
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
@@ -392,7 +343,6 @@ function App() {
     gainNode.connect(ctx.destination)
 
     // Settings for a pleasant "ding"
-    debugger
     oscillator.type = 'sine' // Smooth wave
     oscillator.frequency.setValueAtTime(1320, ctx.currentTime) // E6
 
@@ -478,23 +428,6 @@ function App() {
     setDone(() => foundWords.length === currentWords.length)
   }, [foundWords, currentWords])
 
-  useEffect(() => {
-    if (!isMuted && !audioCtxRef.current) {
-      // 初始化 AudioContext (需在用戶點擊後啟動)
-      audioCtxRef.current = new (
-        window.AudioContext || window.webkitAudioContext
-      )()
-      startBGM()
-    }
-
-    // 處理靜音邏輯
-    if (isMuted && audioCtxRef.current) {
-      audioCtxRef.current.suspend()
-    } else if (!isMuted && audioCtxRef.current) {
-      audioCtxRef.current.resume()
-    }
-  }, [isMuted, startBGM])
-
   return (
     <main>
       <section className='main-content word-game'>
@@ -503,18 +436,6 @@ function App() {
         ) : null}
         {started ? (
           <>
-            {/* 喇叭按鈕 */}
-            <button
-              className='mute-btn'
-              onClick={() => setIsMuted(!isMuted)}
-              style={{
-                marginLeft: '10px',
-                fontSize: '1.2rem',
-                cursor: 'pointer',
-              }}
-            >
-              {isMuted ? '🔇' : '🔊'}
-            </button>
             <h2>Find these {currentWords.length} words</h2>
             <div className='word-search-game'>
               <div className='words-list'>
