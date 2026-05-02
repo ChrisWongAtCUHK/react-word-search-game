@@ -123,8 +123,29 @@ function App() {
   )
   const [started, setStarted] = useState(false)
   const audioCtxRef = useRef(null)
+  const bgmSourceRef = useRef(null)
+
+  const startBGM = useCallback((ctx) => {
+    if (bgmSourceRef.current) return // 避免重複播放
+
+    // 這裡演示用代碼生成一段簡單的背景層次感音效
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+
+    oscillator.type = 'triangle' // 三角波，聽起來比較柔和
+    oscillator.frequency.setValueAtTime(220, ctx.currentTime) // 低音 A3
+
+    gainNode.gain.setValueAtTime(0.02, ctx.currentTime) // 音量要非常小，才不會吵
+
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
+
+    oscillator.start()
+    bgmSourceRef.current = oscillator
+  }, [])
+
   const unlockAudio = useCallback(() => {
-    // make sure there is instance
+    // Make sure there is an instance
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (
         window.AudioContext || window.webkitAudioContext
@@ -133,14 +154,18 @@ function App() {
 
     const ctx = audioCtxRef.current
 
-    // unlock if suspended or interrupted
+    // Unlock if suspended or interrupted
     if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
       // force resume
-      ctx.resume()
+      ctx.resume().then(() => {
+        startBGM(ctx) // 在這裡啟動背景音樂
+      })
+    } else {
+      startBGM(ctx)
     }
 
     setStarted(true)
-  }, [])
+  }, [startBGM])
 
   function letterTileClasses(x, y) {
     const foundCell = selectedCells.find((cell) => cell.x === x && cell.y === y)
