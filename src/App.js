@@ -124,21 +124,23 @@ function App() {
   const [started, setStarted] = useState(false)
   const audioCtxRef = useRef(null)
   const bgmSourceRef = useRef(null)
+  const [isMuted, setIsMuted] = useState(false) // 預設不靜音
+  const gainNode = useRef({ gain: { value: 1 } })
 
   const startBGM = useCallback((ctx) => {
     if (bgmSourceRef.current) return // 避免重複播放
 
     // 這裡演示用代碼生成一段簡單的背景層次感音效
     const oscillator = ctx.createOscillator()
-    const gainNode = ctx.createGain()
+    gainNode.current = ctx.createGain()
 
     oscillator.type = 'triangle' // 三角波，聽起來比較柔和
     oscillator.frequency.setValueAtTime(220, ctx.currentTime) // 低音 A3
 
-    gainNode.gain.setValueAtTime(0.02, ctx.currentTime) // 音量要非常小，才不會吵
+    gainNode.current.gain.setValueAtTime(0.02, ctx.currentTime) // 音量要非常小，才不會吵
 
-    oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
+    oscillator.connect(gainNode.current)
+    gainNode.current.connect(ctx.destination)
 
     oscillator.start()
     bgmSourceRef.current = oscillator
@@ -452,6 +454,21 @@ function App() {
     setDone(() => foundWords.length === currentWords.length)
   }, [foundWords, currentWords])
 
+  useEffect(() => {
+    if (isMuted) {
+      gainNode.current.gain.value = 0
+    } else {
+      gainNode.current.gain.value = 1
+      if (audioCtxRef.current) {
+        // 音量要非常小，才不會吵
+        gainNode.current.gain.setValueAtTime(
+          0.02,
+          audioCtxRef.current.currentTime,
+        )
+      }
+    }
+  }, [isMuted])
+
   return (
     <main>
       <section className='main-content word-game'>
@@ -460,6 +477,18 @@ function App() {
         ) : null}
         {started ? (
           <>
+            {/* 喇叭按鈕 */}
+            <button
+              className='mute-btn'
+              onClick={() => setIsMuted(!isMuted)}
+              style={{
+                marginLeft: '10px',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+              }}
+            >
+              {isMuted ? '🔇' : '🔊'}
+            </button>
             <h2>Find these {currentWords.length} words</h2>
             <div className='word-search-game'>
               <div className='words-list'>
